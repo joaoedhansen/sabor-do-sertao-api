@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  senha     String
+  perfil    String
+  createdAt DateTime @default(now())
+
+  pedidos       Pedido[]
+  fidelidades   Fidelidade[]
+  logsAuditoria LogAuditoria[]
+}
+
+model Unidade {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  endereco  String
+  telefone  String
+  createdAt DateTime @default(now())
+
+  pedidos Pedido[]
+  estoques Estoque[]
+}
+
+model Produto {
+  id          Int      @id @default(autoincrement())
+  nome        String
+  descricao   String
+  preco       Float
+  createdAt   DateTime @default(now())
+
+  itensPedido ItemPedido[]
+  estoques    Estoque[]
+}
+
+model Pedido {
+  id           Int      @id @default(autoincrement())
+  usuarioId    Int
+  unidadeId    Int
+  canalPedido  String
+  status       String
+  valorTotal   Float
+  createdAt    DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  unidade Unidade @relation(fields: [unidadeId], references: [id])
+
+  itens       ItemPedido[]
+  pagamentos  Pagamento[]
+}
+
+model ItemPedido {
+  id            Int   @id @default(autoincrement())
+  pedidoId      Int
+  produtoId     Int
+  quantidade    Int
+  precoUnitario Float
+
+  pedido  Pedido  @relation(fields: [pedidoId], references: [id])
+  produto Produto @relation(fields: [produtoId], references: [id])
+}
+
+model Pagamento {
+  id         Int      @id @default(autoincrement())
+  pedidoId   Int
+  status     String
+  valor      Float
+  metodo     String
+  createdAt  DateTime @default(now())
+
+  pedido Pedido @relation(fields: [pedidoId], references: [id])
+}
+
+model Fidelidade {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int
+  pontos     Int
+  updatedAt  DateTime @updatedAt
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+}
+
+model Estoque {
+  id          Int      @id @default(autoincrement())
+  produtoId   Int
+  unidadeId   Int
+  quantidade  Int
+  updatedAt   DateTime @updatedAt
+
+  produto Produto @relation(fields: [produtoId], references: [id])
+  unidade Unidade @relation(fields: [unidadeId], references: [id])
+}
+
+model LogAuditoria {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int
+  acao       String
+  createdAt  DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+}
