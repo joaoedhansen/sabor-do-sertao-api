@@ -1,10 +1,15 @@
 const prisma = require("../prisma/prismaClient");
 
+const registrarLog =
+    require("../utils/logAuditoria");
+
 class ProdutoController {
 
     async criar(req, res) {
 
         try {
+
+            const usuarioId = req.usuario.id;
 
             const {
                 nome,
@@ -12,13 +17,22 @@ class ProdutoController {
                 preco
             } = req.body;
 
-            const produto = await prisma.produto.create({
-                data: {
-                    nome,
-                    descricao,
-                    preco
-                }
-            });
+            const produto =
+                await prisma.produto.create({
+
+                    data: {
+                        nome,
+                        descricao,
+                        preco
+                    }
+
+                });
+
+            // LOG
+            await registrarLog(
+                usuarioId,
+                `Criou produto ${produto.nome}`
+            );
 
             return res.status(201).json(produto);
 
@@ -38,7 +52,8 @@ class ProdutoController {
 
         try {
 
-            const produtos = await prisma.produto.findMany();
+            const produtos =
+                await prisma.produto.findMany();
 
             return res.json(produtos);
 
@@ -58,16 +73,21 @@ class ProdutoController {
 
             const { id } = req.params;
 
-            const produto = await prisma.produto.findUnique({
-                where: {
-                    id: Number(id)
-                }
-            });
+            const produto =
+                await prisma.produto.findUnique({
+
+                    where: {
+                        id: Number(id)
+                    }
+
+                });
 
             if (!produto) {
+
                 return res.status(404).json({
                     erro: "Produto não encontrado"
                 });
+
             }
 
             return res.json(produto);
@@ -86,6 +106,8 @@ class ProdutoController {
 
         try {
 
+            const usuarioId = req.usuario.id;
+
             const { id } = req.params;
 
             const {
@@ -94,16 +116,26 @@ class ProdutoController {
                 preco
             } = req.body;
 
-            const produto = await prisma.produto.update({
-                where: {
-                    id: Number(id)
-                },
-                data: {
-                    nome,
-                    descricao,
-                    preco
-                }
-            });
+            const produto =
+                await prisma.produto.update({
+
+                    where: {
+                        id: Number(id)
+                    },
+
+                    data: {
+                        nome,
+                        descricao,
+                        preco
+                    }
+
+                });
+
+            // LOG
+            await registrarLog(
+                usuarioId,
+                `Atualizou produto ${produto.nome}`
+            );
 
             return res.json(produto);
 
@@ -121,13 +153,32 @@ class ProdutoController {
 
         try {
 
+            const usuarioId = req.usuario.id;
+
             const { id } = req.params;
 
+            const produto =
+                await prisma.produto.findUnique({
+
+                    where: {
+                        id: Number(id)
+                    }
+
+                });
+
             await prisma.produto.delete({
+
                 where: {
                     id: Number(id)
                 }
+
             });
+
+            // LOG
+            await registrarLog(
+                usuarioId,
+                `Deletou produto ${produto.nome}`
+            );
 
             return res.status(204).send();
 

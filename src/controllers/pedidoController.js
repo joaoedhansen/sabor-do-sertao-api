@@ -14,67 +14,186 @@ class PedidoController {
                 itens
             } = req.body;
 
-            // Buscar produtos no banco
-            const produtosIds = itens.map(item => item.produtoId);
+            // Buscar produtos
+            const produtosIds =
+                itens.map(item => item.produtoId);
 
-            const produtos = await prisma.produto.findMany({
-                where: {
-                    id: {
-                        in: produtosIds
+            const produtos =
+                await prisma.produto.findMany({
+
+                    where: {
+                        id: {
+                            in: produtosIds
+                        }
                     }
-                }
-            });
 
-            // Calcular valor total
+                });
+
+            // Calcular total
             let valorTotal = 0;
 
-            const itensPedido = itens.map(item => {
+            const itensPedido = [];
+
+            for (const item of itens) {
 
                 const produto = produtos.find(
                     p => p.id === item.produtoId
                 );
 
+                // Validar produto
                 if (!produto) {
+
                     throw new Error(
                         `Produto ${item.produtoId} não encontrado`
                     );
+
                 }
 
+                // Buscar estoque
+                const estoque =
+                    await prisma.estoque.findFirst({
+
+                        where: {
+                            produtoId: item.produtoId,
+                            unidadeId
+                        }
+
+                    });
+
+                // Validar estoque
+                if (!estoque) {
+
+                    throw new Error(
+                        `Estoque não encontrado para produto ${item.produtoId}`
+                    );
+
+                }
+
+                // Validar quantidade
+                if (estoque.quantidade < item.quantidade) {
+
+                    throw new Error(
+                        `Estoque insuficiente para produto ${produto.nome}`
+                    );
+
+                }
+
+                // Calcular subtotal
                 const subtotal =
                     produto.preco * item.quantidade;
 
                 valorTotal += subtotal;
 
-                return {
+                itensPedido.push({
+
                     produtoId: produto.id,
                     quantidade: item.quantidade,
                     precoUnitario: produto.preco
-                };
 
-            });
+                });
 
-            // Criar pedido + itens
-            const pedido = await prisma.pedido.create({
-                data: {
-                    usuarioId,
-                    unidadeId,
-                    canalPedido,
-                    status: "EM_PREPARO",
-                    valorTotal,
+            }
 
-                    itens: {
-                        create: itensPedido
-                    }
-                },
+            // Criar pedido
+            const pedido =
+                await prisma.pedido.create({
 
-                include: {
-                    itens: {
-                        include: {
-                            produto: true
+                    data: {
+
+                        usuarioId,
+                        unidadeId,
+                        canalPedido,
+                        status: "EM_PREPARO",
+                        valorTotal,
+
+                        itens: {
+                            create: itensPedido
                         }
+
+                    },
+
+                    include: {
+
+                        itens: {
+                            include: {
+                                produto: true
+                            }
+                        }
+
                     }
-                }
-            });
+
+                });
+
+            // Atualizar estoque
+            for (const item of itens) {
+
+                const estoque =
+                    await prisma.estoque.findFirst({
+
+                        where: {
+                            produtoId: item.produtoId,
+                            unidadeId
+                        }
+
+                    });
+
+                await prisma.estoque.update({
+
+                    where: {
+                        id: estoque.id
+                    },
+
+                    data: {
+                        quantidade:
+                            estoque.quantidade -
+                            item.quantidade
+                    }
+
+                });
+
+            }
+
+            // Fidelidade
+            const pontosGanhos =
+                Math.floor(valorTotal / 10);
+
+            const fidelidade =
+                await prisma.fidelidade.findFirst({
+
+                    where: {
+                        usuarioId
+                    }
+
+                });
+
+            if (fidelidade) {
+
+                await prisma.fidelidade.update({
+
+                    where: {
+                        id: fidelidade.id
+                    },
+
+                    data: {
+                        pontos:
+                            fidelidade.pontos +
+                            pontosGanhos
+                    }
+
+                });
+
+            } else {
+
+                await prisma.fidelidade.create({
+
+                    data: {
+                        usuarioId,
+                        pontos: pontosGanhos
+                    }
+
+                });
+
+            }
 
             return res.status(201).json(pedido);
 
@@ -83,7 +202,9 @@ class PedidoController {
             console.log(error);
 
             return res.status(500).json({
-                error: error.message || "Erro ao criar pedido"
+                error:
+                    error.message ||
+                    "Erro ao criar pedido"
             });
 
         }
@@ -94,29 +215,30 @@ class PedidoController {
 
         try {
 
-            const pedidos = await prisma.pedido.findMany({
+            const pedidos =
+                await prisma.pedido.findMany({
 
-                include: {
+                    include: {
 
-                    usuario: {
-                        select: {
-                            id: true,
-                            nome: true,
-                            email: true
+                        usuario: {
+                            select: {
+                                id: true,
+                                nome: true,
+                                email: true
+                            }
+                        },
+
+                        unidade: true,
+
+                        itens: {
+                            include: {
+                                produto: true
+                            }
                         }
-                    },
 
-                    unidade: true,
-
-                    itens: {
-                        include: {
-                            produto: true
-                        }
                     }
 
-                }
-
-            });
+                });
 
             return res.json(pedidos);
 
@@ -136,31 +258,41 @@ class PedidoController {
 
             const { id } = req.params;
 
-            const pedido = await prisma.pedido.findUnique({
-                where: {
-                    id: Number(id)
-                },
-                include: {
-                    usuario: {
-                        select: {
-                            id: true,
-                            nome: true,
-                            email: true
-                        }
+            const pedido =
+                await prisma.pedido.findUnique({
+
+                    where: {
+                        id: Number(id)
                     },
-                    unidade: true,
-                    itens: {
-                        include: {
-                            produto: true
+
+                    include: {
+
+                        usuario: {
+                            select: {
+                                id: true,
+                                nome: true,
+                                email: true
+                            }
+                        },
+
+                        unidade: true,
+
+                        itens: {
+                            include: {
+                                produto: true
+                            }
                         }
+
                     }
-                }
-            });
+
+                });
 
             if (!pedido) {
+
                 return res.status(404).json({
                     error: "Pedido não encontrado"
                 });
+
             }
 
             return res.json(pedido);
@@ -200,14 +332,18 @@ class PedidoController {
 
             }
 
-            const pedido = await prisma.pedido.update({
-                where: {
-                    id: Number(id)
-                },
-                data: {
-                    status
-                }
-            });
+            const pedido =
+                await prisma.pedido.update({
+
+                    where: {
+                        id: Number(id)
+                    },
+
+                    data: {
+                        status
+                    }
+
+                });
 
             return res.json(pedido);
 
@@ -216,7 +352,8 @@ class PedidoController {
             console.log(error);
 
             return res.status(500).json({
-                error: "Erro ao atualizar status do pedido"
+                error:
+                    "Erro ao atualizar status do pedido"
             });
 
         }
