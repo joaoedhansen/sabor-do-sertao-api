@@ -7,7 +7,7 @@ class UsuarioController {
 
         try {
 
-            const { nome, email, senha, perfil } = req.body;
+            const { nome, email, senha } = req.body;
 
             const senhaHash = await bcrypt.hash(senha, 8);
 
@@ -16,13 +16,15 @@ class UsuarioController {
                     nome,
                     email,
                     senha: senhaHash,
-                    perfil
+                    perfil: "CLIENTE"
                 }
             });
 
             return res.status(201).json(usuario);
 
         } catch (error) {
+
+            console.log(error);
 
             return res.status(500).json({
                 erro: "Erro ao criar usuário"
