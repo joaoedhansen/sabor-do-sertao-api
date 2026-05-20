@@ -14,7 +14,39 @@ class PedidoController {
                 itens
             } = req.body;
 
-            // Buscar produtos
+            // =========================
+            // VALIDAR UNIDADE
+            // =========================
+
+            if (!unidadeId) {
+
+                return res.status(400).json({
+                    error: "Unidade é obrigatória"
+                });
+
+            }
+
+            const unidade =
+                await prisma.unidade.findUnique({
+
+                    where: {
+                        id: unidadeId
+                    }
+
+                });
+
+            if (!unidade) {
+
+                return res.status(404).json({
+                    error: "Unidade não encontrada"
+                });
+
+            }
+
+            // =========================
+            // BUSCAR PRODUTOS
+            // =========================
+
             const produtosIds =
                 itens.map(item => item.produtoId);
 
@@ -29,7 +61,10 @@ class PedidoController {
 
                 });
 
-            // Calcular total
+            // =========================
+            // CALCULAR TOTAL
+            // =========================
+
             let valorTotal = 0;
 
             const itensPedido = [];
@@ -79,10 +114,18 @@ class PedidoController {
                 }
 
                 // Calcular subtotal
-                const subtotal =
-                    produto.preco * item.quantidade;
+                const subtotal = Number(
+                    (
+                        produto.preco *
+                        item.quantidade
+                    ).toFixed(2)
+                );
 
-                valorTotal += subtotal;
+                valorTotal = Number(
+                    (
+                        valorTotal + subtotal
+                    ).toFixed(2)
+                );
 
                 itensPedido.push({
 
@@ -94,7 +137,10 @@ class PedidoController {
 
             }
 
-            // Criar pedido
+            // =========================
+            // CRIAR PEDIDO
+            // =========================
+
             const pedido =
                 await prisma.pedido.create({
 
@@ -114,6 +160,8 @@ class PedidoController {
 
                     include: {
 
+                        unidade: true,
+
                         itens: {
                             include: {
                                 produto: true
@@ -124,7 +172,10 @@ class PedidoController {
 
                 });
 
-            // Atualizar estoque
+            // =========================
+            // ATUALIZAR ESTOQUE
+            // =========================
+
             for (const item of itens) {
 
                 const estoque =
@@ -153,7 +204,10 @@ class PedidoController {
 
             }
 
-            // Fidelidade
+            // =========================
+            // FIDELIDADE
+            // =========================
+
             const pontosGanhos =
                 Math.floor(valorTotal / 10);
 
@@ -215,30 +269,71 @@ class PedidoController {
 
         try {
 
-            const pedidos =
-                await prisma.pedido.findMany({
+            const usuario = req.usuario;
 
-                    include: {
+            let pedidos;
 
-                        usuario: {
-                            select: {
-                                id: true,
-                                nome: true,
-                                email: true
-                            }
+            // CLIENTE vê apenas próprios pedidos
+            if (usuario.perfil === "CLIENTE") {
+
+                pedidos =
+                    await prisma.pedido.findMany({
+
+                        where: {
+                            usuarioId: usuario.id
                         },
 
-                        unidade: true,
+                        include: {
 
-                        itens: {
-                            include: {
-                                produto: true
+                            usuario: {
+                                select: {
+                                    id: true,
+                                    nome: true,
+                                    email: true
+                                }
+                            },
+
+                            unidade: true,
+
+                            itens: {
+                                include: {
+                                    produto: true
+                                }
                             }
+
                         }
 
-                    }
+                    });
 
-                });
+            } else {
+
+                // ATENDENTE / COZINHA / GERENTE
+                pedidos =
+                    await prisma.pedido.findMany({
+
+                        include: {
+
+                            usuario: {
+                                select: {
+                                    id: true,
+                                    nome: true,
+                                    email: true
+                                }
+                            },
+
+                            unidade: true,
+
+                            itens: {
+                                include: {
+                                    produto: true
+                                }
+                            }
+
+                        }
+
+                    });
+
+            }
 
             return res.json(pedidos);
 
@@ -319,6 +414,7 @@ class PedidoController {
 
             const statusPermitidos = [
                 "EM_PREPARO",
+                "PRONTO",
                 "SAIU_ENTREGA",
                 "FINALIZADO",
                 "CANCELADO"

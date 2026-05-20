@@ -18,12 +18,24 @@ router.post(
 router.get(
     "/produtos",
     authMiddleware,
+    perfilMiddleware([
+        "CLIENTE",
+        "ATENDENTE",
+        "COZINHA",
+        "GERENTE"
+    ]),
     produtoController.listar
 );
 
 router.get(
     "/produtos/:id",
     authMiddleware,
+    perfilMiddleware([
+        "CLIENTE",
+        "ATENDENTE",
+        "COZINHA",
+        "GERENTE"
+    ]),
     produtoController.buscarPorId
 );
 

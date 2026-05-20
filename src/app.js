@@ -1,34 +1,41 @@
 const express = require("express");
+
 const cors = require("cors");
 
 require("dotenv").config();
 
-const usuarioRoutes = require("./routes/usuarioRoutes");
+const authRoutes =
+    require("./routes/authRoutes");
 
-const authRoutes = require("./routes/authRoutes");
+const pedidoRoutes =
+    require("./routes/pedidoRoutes");
 
-const pedidoRoutes = require("./routes/pedidoRoutes");
+const produtoRoutes =
+    require("./routes/produtoRoutes");
 
-const produtoRoutes = require("./routes/produtoRoutes");
+const fidelidadeRoutes =
+    require("./routes/fidelidadeRoutes");
 
-const fidelidadeRoutes = require("./routes/fidelidadeRoutes");
+const estoqueRoutes =
+    require("./routes/estoqueRoutes");
 
-const estoqueRoutes = require("./routes/estoqueRoutes");
-
-const logRoutes = require("./routes/logRoutes");
+const logRoutes =
+    require("./routes/logRoutes");
 
 const dashboardRoutes =
     require("./routes/dashboardRoutes");
 
-const relatorioRoutes = require("./routes/relatorioRoutes");
+const relatorioRoutes =
+    require("./routes/relatorioRoutes");
+
+const unidadeRoutes =
+    require("./routes/unidadeRoutes");
 
 const app = express();
 
 app.use(cors());
 
 app.use(express.json());
-
-app.use("/usuarios", usuarioRoutes);
 
 app.use(authRoutes);
 
@@ -46,14 +53,23 @@ app.use(dashboardRoutes);
 
 app.use(relatorioRoutes);
 
+app.use(unidadeRoutes);
+
 app.get("/", (req, res) => {
+
     return res.json({
-        message: "API Sabor do Sertão funcionando!"
+        message:
+            "API Sabor do Sertão funcionando!"
     });
+
 });
 
 const PORT = 3000;
 
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+
+    console.log(
+        `Servidor rodando na porta ${PORT}`
+    );
+
 });

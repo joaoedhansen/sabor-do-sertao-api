@@ -7,27 +7,43 @@ class RelatorioController {
         try {
 
             // Buscar pedidos
-            const pedidos = await prisma.pedido.findMany();
+            const pedidos =
+                await prisma.pedido.findMany();
 
             // Total faturado
-            const totalVendas = pedidos.reduce(
-                (total, pedido) => total + pedido.valorTotal,
-                0
-            );
+            const totalVendas =
+                pedidos.reduce(
 
-            // Quantidade de pedidos
-            const quantidadePedidos = pedidos.length;
+                    (total, pedido) =>
+                        total + pedido.valorTotal,
+
+                    0
+
+                );
+
+            // Quantidade pedidos
+            const quantidadePedidos =
+                pedidos.length;
 
             // Ticket médio
             const ticketMedio =
                 quantidadePedidos > 0
-                    ? totalVendas / quantidadePedidos
+                    ? totalVendas /
+                      quantidadePedidos
                     : 0;
 
             return res.json({
-                totalVendas,
+
+                totalVendas: Number(
+                    totalVendas.toFixed(2)
+                ),
+
                 quantidadePedidos,
-                ticketMedio
+
+                ticketMedio: Number(
+                    ticketMedio.toFixed(2)
+                )
+
             });
 
         } catch (error) {

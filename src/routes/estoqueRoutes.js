@@ -21,6 +21,10 @@ router.post(
 router.get(
     "/estoques",
     authMiddleware,
+    perfilMiddleware([
+        "COZINHA",
+        "GERENTE"
+    ]),
     estoqueController.listar
 );
 

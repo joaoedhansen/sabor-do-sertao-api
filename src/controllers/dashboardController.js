@@ -38,8 +38,11 @@ class DashboardController {
 
                 totalPedidos,
 
-                faturamentoTotal:
-                    faturamento._sum.valorTotal || 0,
+                faturamentoTotal: Number(
+                    (
+                        faturamento._sum.valorTotal || 0
+                    ).toFixed(2)
+                ),
 
                 totalClientes,
 

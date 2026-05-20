@@ -11,25 +11,43 @@ const router = express.Router();
 router.post(
     "/pedidos",
     authMiddleware,
+    perfilMiddleware([
+        "CLIENTE",
+        "ATENDENTE",
+        "GERENTE"
+    ]),
     pedidoController.criar
 );
 
 router.get(
     "/pedidos",
     authMiddleware,
+    perfilMiddleware([
+        "ATENDENTE",
+        "COZINHA",
+        "GERENTE"
+    ]),
     pedidoController.listar
 );
 
 router.get(
     "/pedidos/:id",
     authMiddleware,
+    perfilMiddleware([
+        "ATENDENTE",
+        "COZINHA",
+        "GERENTE"
+    ]),
     pedidoController.buscarPorId
 );
 
 router.patch(
     "/pedidos/:id/status",
     authMiddleware,
-    perfilMiddleware(["GERENTE"]),
+    perfilMiddleware([
+        "COZINHA",
+        "GERENTE"
+    ]),
     pedidoController.atualizarStatus
 );
 
