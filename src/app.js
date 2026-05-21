@@ -2,7 +2,16 @@ const express = require("express");
 
 const cors = require("cors");
 
+const swaggerUi =
+    require("swagger-ui-express");
+
+const swaggerSpec =
+    require("./docs/swagger");
+
 require("dotenv").config();
+
+const usuarioRoutes =
+    require("./routes/usuarioRoutes");
 
 const authRoutes =
     require("./routes/authRoutes");
@@ -36,6 +45,22 @@ const app = express();
 app.use(cors());
 
 app.use(express.json());
+
+// =========================
+// SWAGGER
+// =========================
+
+app.use(
+    "/docs",
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec)
+);
+
+// =========================
+// ROTAS
+// =========================
+
+app.use(usuarioRoutes);
 
 app.use(authRoutes);
 

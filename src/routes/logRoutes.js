@@ -11,6 +11,19 @@ const perfilMiddleware =
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /logs:
+ *   get:
+ *     summary: Listar logs de auditoria
+ *     tags: [Logs]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de logs retornada com sucesso
+ */
+
 router.get(
     "/logs",
     authMiddleware,

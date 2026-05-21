@@ -17,13 +17,36 @@ class ProdutoController {
                 preco
             } = req.body;
 
+            // =========================
+            // VALIDAÇÕES
+            // =========================
+
+            if (!nome || nome.trim() === "") {
+
+                return res.status(400).json({
+                    erro: "Nome é obrigatório"
+                });
+
+            }
+
+            if (
+                preco === undefined ||
+                preco <= 0
+            ) {
+
+                return res.status(400).json({
+                    erro: "Preço deve ser maior que 0"
+                });
+
+            }
+
             const produto =
                 await prisma.produto.create({
 
                     data: {
                         nome,
                         descricao,
-                        preco
+                        preco: Number(preco)
                     }
 
                 });
@@ -116,6 +139,29 @@ class ProdutoController {
                 preco
             } = req.body;
 
+            // =========================
+            // VALIDAÇÕES
+            // =========================
+
+            if (!nome || nome.trim() === "") {
+
+                return res.status(400).json({
+                    erro: "Nome é obrigatório"
+                });
+
+            }
+
+            if (
+                preco === undefined ||
+                preco <= 0
+            ) {
+
+                return res.status(400).json({
+                    erro: "Preço deve ser maior que 0"
+                });
+
+            }
+
             const produto =
                 await prisma.produto.update({
 
@@ -126,7 +172,7 @@ class ProdutoController {
                     data: {
                         nome,
                         descricao,
-                        preco
+                        preco: Number(preco)
                     }
 
                 });
@@ -165,6 +211,14 @@ class ProdutoController {
                     }
 
                 });
+
+            if (!produto) {
+
+                return res.status(404).json({
+                    erro: "Produto não encontrado"
+                });
+
+            }
 
             await prisma.produto.delete({
 

@@ -12,6 +12,40 @@ class UnidadeController {
                 telefone
             } = req.body;
 
+            // =========================
+            // VALIDAÇÕES
+            // =========================
+
+            if (!nome || nome.trim() === "") {
+
+                return res.status(400).json({
+                    error: "Nome é obrigatório"
+                });
+
+            }
+
+            if (
+                !endereco ||
+                endereco.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    error: "Endereço é obrigatório"
+                });
+
+            }
+
+            if (
+                !telefone ||
+                telefone.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    error: "Telefone é obrigatório"
+                });
+
+            }
+
             const unidade =
                 await prisma.unidade.create({
 
@@ -103,6 +137,40 @@ class UnidadeController {
                 telefone
             } = req.body;
 
+            // =========================
+            // VALIDAÇÕES
+            // =========================
+
+            if (!nome || nome.trim() === "") {
+
+                return res.status(400).json({
+                    error: "Nome é obrigatório"
+                });
+
+            }
+
+            if (
+                !endereco ||
+                endereco.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    error: "Endereço é obrigatório"
+                });
+
+            }
+
+            if (
+                !telefone ||
+                telefone.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    error: "Telefone é obrigatório"
+                });
+
+            }
+
             const unidade =
                 await prisma.unidade.update({
 
@@ -135,6 +203,23 @@ class UnidadeController {
         try {
 
             const { id } = req.params;
+
+            const unidade =
+                await prisma.unidade.findUnique({
+
+                    where: {
+                        id: Number(id)
+                    }
+
+                });
+
+            if (!unidade) {
+
+                return res.status(404).json({
+                    error: "Unidade não encontrada"
+                });
+
+            }
 
             await prisma.unidade.delete({
 

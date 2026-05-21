@@ -15,7 +15,7 @@ class PedidoController {
             } = req.body;
 
             // =========================
-            // VALIDAR UNIDADE
+            // VALIDAÇÕES
             // =========================
 
             if (!unidadeId) {
@@ -25,6 +25,50 @@ class PedidoController {
                 });
 
             }
+
+            if (
+                !canalPedido ||
+                canalPedido.trim() === ""
+            ) {
+
+                return res.status(400).json({
+                    error: "Canal do pedido é obrigatório"
+                });
+
+            }
+
+            if (
+                !itens ||
+                !Array.isArray(itens) ||
+                itens.length === 0
+            ) {
+
+                return res.status(400).json({
+                    error: "Itens do pedido são obrigatórios"
+                });
+
+            }
+
+            // Validar quantidade itens
+            for (const item of itens) {
+
+                if (
+                    !item.quantidade ||
+                    item.quantidade <= 0
+                ) {
+
+                    return res.status(400).json({
+                        error:
+                            "Quantidade deve ser maior que 0"
+                    });
+
+                }
+
+            }
+
+            // =========================
+            // VALIDAR UNIDADE
+            // =========================
 
             const unidade =
                 await prisma.unidade.findUnique({
@@ -428,7 +472,102 @@ class PedidoController {
 
             }
 
+            // =========================
+            // BUSCAR PEDIDO
+            // =========================
+
             const pedido =
+                await prisma.pedido.findUnique({
+
+                    where: {
+                        id: Number(id)
+                    },
+
+                    include: {
+                        itens: true
+                    }
+
+                });
+
+            if (!pedido) {
+
+                return res.status(404).json({
+                    error: "Pedido não encontrado"
+                });
+
+            }
+
+            // =========================
+            // VALIDAR CANCELAMENTO
+            // =========================
+
+            if (
+                pedido.status === "FINALIZADO"
+            ) {
+
+                return res.status(400).json({
+                    error:
+                        "Pedido finalizado não pode ser cancelado"
+                });
+
+            }
+
+            if (
+                pedido.status === "CANCELADO"
+            ) {
+
+                return res.status(400).json({
+                    error:
+                        "Pedido já está cancelado"
+                });
+
+            }
+
+            // =========================
+            // DEVOLVER ESTOQUE
+            // =========================
+
+            if (status === "CANCELADO") {
+
+                for (const item of pedido.itens) {
+
+                    const estoque =
+                        await prisma.estoque.findFirst({
+
+                            where: {
+                                produtoId: item.produtoId,
+                                unidadeId: pedido.unidadeId
+                            }
+
+                        });
+
+                    if (estoque) {
+
+                        await prisma.estoque.update({
+
+                            where: {
+                                id: estoque.id
+                            },
+
+                            data: {
+                                quantidade:
+                                    estoque.quantidade +
+                                    item.quantidade
+                            }
+
+                        });
+
+                    }
+
+                }
+
+            }
+
+            // =========================
+            // ATUALIZAR STATUS
+            // =========================
+
+            const pedidoAtualizado =
                 await prisma.pedido.update({
 
                     where: {
@@ -441,7 +580,7 @@ class PedidoController {
 
                 });
 
-            return res.json(pedido);
+            return res.json(pedidoAtualizado);
 
         } catch (error) {
 
