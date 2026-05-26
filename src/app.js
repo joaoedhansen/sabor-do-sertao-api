@@ -40,6 +40,9 @@ const relatorioRoutes =
 const unidadeRoutes =
     require("./routes/unidadeRoutes");
 
+const pagamentoRoutes =
+    require("./routes/pagamentoRoutes");    
+
 const app = express();
 
 app.use(cors());
@@ -65,6 +68,8 @@ app.use(usuarioRoutes);
 app.use(authRoutes);
 
 app.use(pedidoRoutes);
+
+app.use(pagamentoRoutes);
 
 app.use(produtoRoutes);
 

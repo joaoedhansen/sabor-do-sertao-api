@@ -37,6 +37,24 @@ class PedidoController {
 
             }
 
+            const canaisPermitidos = [
+                "APP",
+                "TOTEM",
+                "BALCAO",
+                "PICKUP",
+                "WEB"
+            ];
+
+            if (
+                !canaisPermitidos.includes(canalPedido)
+            ) {
+
+                return res.status(400).json({
+                    error: "Canal do pedido inválido"
+                });
+
+            }
+
             if (
                 !itens ||
                 !Array.isArray(itens) ||
@@ -49,7 +67,10 @@ class PedidoController {
 
             }
 
-            // Validar quantidade itens
+            // =========================
+            // VALIDAR QUANTIDADE
+            // =========================
+
             for (const item of itens) {
 
                 if (
@@ -122,9 +143,10 @@ class PedidoController {
                 // Validar produto
                 if (!produto) {
 
-                    throw new Error(
-                        `Produto ${item.produtoId} não encontrado`
-                    );
+                    return res.status(404).json({
+                        error:
+                            `Produto ${item.produtoId} não encontrado`
+                    });
 
                 }
 
@@ -142,18 +164,20 @@ class PedidoController {
                 // Validar estoque
                 if (!estoque) {
 
-                    throw new Error(
-                        `Estoque não encontrado para produto ${item.produtoId}`
-                    );
+                    return res.status(404).json({
+                        error:
+                            `Estoque não encontrado para produto ${item.produtoId}`
+                    });
 
                 }
 
                 // Validar quantidade
                 if (estoque.quantidade < item.quantidade) {
 
-                    throw new Error(
-                        `Estoque insuficiente para produto ${produto.nome}`
-                    );
+                    return res.status(409).json({
+                        error:
+                            `Estoque insuficiente para produto ${produto.nome}`
+                    });
 
                 }
 
@@ -315,16 +339,24 @@ class PedidoController {
 
             const usuario = req.usuario;
 
+            const { canalPedido } = req.query;
+
             let pedidos;
 
-            // CLIENTE vê apenas próprios pedidos
+            // CLIENTE
             if (usuario.perfil === "CLIENTE") {
 
                 pedidos =
                     await prisma.pedido.findMany({
 
                         where: {
-                            usuarioId: usuario.id
+
+                            usuarioId: usuario.id,
+
+                            ...(canalPedido && {
+                                canalPedido
+                            })
+
                         },
 
                         include: {
@@ -352,8 +384,17 @@ class PedidoController {
             } else {
 
                 // ATENDENTE / COZINHA / GERENTE
+
                 pedidos =
                     await prisma.pedido.findMany({
+
+                        where: {
+
+                            ...(canalPedido && {
+                                canalPedido
+                            })
+
+                        },
 
                         include: {
 
