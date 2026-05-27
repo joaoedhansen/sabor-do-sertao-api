@@ -1,4 +1,4 @@
-# Sistema de Gestão - Sabor do Sertão
+# API Sabor do Sertão
 
 Projeto desenvolvido para a disciplina de Desenvolvimento Back-end da UNINTER.
 
@@ -78,6 +78,10 @@ UNINTER
 
 ## Logs
 - Auditoria de ações do sistema
+
+## Documentação
+- Swagger/OpenAPI
+- Collection Postman
 
 ---
 
@@ -218,6 +222,16 @@ src/
 - Mock de pagamento
 - Relatórios
 - Logs de auditoria
+
+---
+
+# Postman Collection
+
+A collection utilizada para testes da API está disponível em:
+
+```bash
+postman/Sabor-do-Sertao-API.postman_collection.json
+```
 
 ---
 
